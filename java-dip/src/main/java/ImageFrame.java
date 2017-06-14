@@ -10,12 +10,11 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.opencv.core.Mat;
-import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 
 public class ImageFrame extends JFrame {
 
@@ -28,10 +27,10 @@ public class ImageFrame extends JFrame {
 			Logger.getLogger(ImageFrame.class.getName());
 
 	private static final short FRAME_WIDTH = 1000;
-	private static final short FRAME_HEIGHT = 640;
+	private static final short FRAME_HEIGHT = 700;
 	
-	private static final short IMAGE_X = 50;
-	private static final short IMAGE_Y = 50;
+	private static final short IMAGE_X = 20;
+	private static final short IMAGE_Y = 20;
 	
 	private static final short IMAGE_WIDTH = 400;
 	private static final short IMAGE_HEIGHT = 400;
@@ -41,10 +40,17 @@ public class ImageFrame extends JFrame {
 	private JMenuBar menuBar;
 	private JMenu fileMenu;
 	private JMenuItem openItem, closeItem;
+	
 	private JLabel labelImage, labelImageProcessed;
-	private JButton erodeButton, dilateButton;
-	private JButton openingButton, closingButton;
+	private JLabel kernelSizeText;
+	
+	private JButton erodeButton, dilateButton, openingButton, closingButton;
+	private JButton blurButton, medianBlurButton, gaussianButton, bilateralButton;
+	private JButton boxButton;
+	private JButton edgeDetectButton;
 	private JButton resetButton;
+	
+	private JTextField kernelSize;
 	
 	private Mat imageMatrix;
 	private Mat imageMatrixProcessed;
@@ -99,11 +105,24 @@ public class ImageFrame extends JFrame {
 									labelImage.getWidth(),
 									labelImage.getHeight()));
 					
-					LOGGER.info("Set buttons visiblity.");
+					LOGGER.info("Set components visiblity.");
+					
+					kernelSizeText.setVisible(true);
+					kernelSize.setVisible(true);
+					
 					erodeButton.setVisible(true);
 					dilateButton.setVisible(true);
 					openingButton.setVisible(true);
 					closingButton.setVisible(true);
+					
+					blurButton.setVisible(true);
+					medianBlurButton.setVisible(true);
+					gaussianButton.setVisible(true);
+					bilateralButton.setVisible(true);
+					
+					boxButton.setVisible(false);
+					edgeDetectButton.setVisible(true);
+					
 					resetButton.setVisible(true);
 				}
 			}
@@ -126,22 +145,9 @@ public class ImageFrame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				
-				int erosionSize = 5;
-				
-				LOGGER.info(
-						"Create structuring element with erosion size = "
-						+ erosionSize + ".");
-				
-				Mat element =
-						Imgproc.getStructuringElement(
-								Imgproc.MORPH_RECT,
-								new Size(2*erosionSize + 1, 2*erosionSize + 1));
-				
-				LOGGER.info("Structuring element = " + element.toString() + ".");
-				Imgproc.erode(imageMatrixProcessed, imageMatrixProcessed, element);
-				LOGGER.info(
-						"Processed matrix = "
-						+ imageMatrixProcessed.toString() + ".");
+				imageMatrixProcessed = ImageProcessing.erode(
+						imageMatrixProcessed,
+						Integer.parseInt(kernelSize.getText()));
 				
 				labelImageProcessed.setIcon(
 						ImageProcessing.convertMatrix(
@@ -157,22 +163,9 @@ public class ImageFrame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				
-				int dilateSize = 5;
-				
-				LOGGER.info(
-						"Create structuring element with dilation size = "
-						+ dilateSize + ".");
-				
-				Mat element =
-						Imgproc.getStructuringElement(
-								Imgproc.MORPH_RECT,
-								new Size(2*dilateSize + 1, 2*dilateSize + 1));
-				
-				LOGGER.info("Structuring element = " + element.toString() + ".");
-				Imgproc.dilate(imageMatrixProcessed, imageMatrixProcessed, element);
-				LOGGER.info(
-						"Processed matrix = "
-						+ imageMatrixProcessed.toString() + ".");
+				imageMatrixProcessed = ImageProcessing.dilate(
+						imageMatrixProcessed,
+						Integer.parseInt(kernelSize.getText()));
 				
 				labelImageProcessed.setIcon(
 						ImageProcessing.convertMatrix(
@@ -188,19 +181,143 @@ public class ImageFrame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				
-				erodeButton.doClick();
-				dilateButton.doClick();
+				imageMatrixProcessed = ImageProcessing.open(
+						imageMatrixProcessed,
+						Integer.parseInt(kernelSize.getText()));
+				
+				labelImageProcessed.setIcon(
+						ImageProcessing.convertMatrix(
+								imageMatrixProcessed,
+								labelImage.getWidth(),
+								labelImage.getHeight()));
 			}
 		});
 		
 		LOGGER.info("Adding action for closing button.");
-		openingButton.addActionListener(new ActionListener() {
+		closingButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
+				imageMatrixProcessed = ImageProcessing.close(
+						imageMatrixProcessed,
+						Integer.parseInt(kernelSize.getText()));
+				
+				labelImageProcessed.setIcon(
+						ImageProcessing.convertMatrix(
+								imageMatrixProcessed,
+								labelImage.getWidth(),
+								labelImage.getHeight()));
+			}
+		});
+		
+		LOGGER.info("Adding action for blur button.");
+		blurButton.addActionListener(new ActionListener() {
 
-				dilateButton.doClick();
-				erodeButton.doClick();
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				imageMatrixProcessed = ImageProcessing.blur(
+						imageMatrixProcessed,
+						Integer.parseInt(kernelSize.getText()));
+				
+				labelImageProcessed.setIcon(
+						ImageProcessing.convertMatrix(
+								imageMatrixProcessed,
+								labelImage.getWidth(),
+								labelImage.getHeight()));
+			}
+		});
+		
+		LOGGER.info("Adding action for median blur button.");
+		medianBlurButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				imageMatrixProcessed = ImageProcessing.medianBlur(
+						imageMatrixProcessed,
+						Integer.parseInt(kernelSize.getText()));
+				
+				labelImageProcessed.setIcon(
+						ImageProcessing.convertMatrix(
+								imageMatrixProcessed,
+								labelImage.getWidth(),
+								labelImage.getHeight()));
+			}
+		});
+		
+		LOGGER.info("Adding action for gaussian blur button.");
+		gaussianButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				imageMatrixProcessed = ImageProcessing.gaussianBlur(
+						imageMatrixProcessed,
+						Integer.parseInt(kernelSize.getText()));
+				
+				labelImageProcessed.setIcon(
+						ImageProcessing.convertMatrix(
+								imageMatrixProcessed,
+								labelImage.getWidth(),
+								labelImage.getHeight()));
+			}
+		});
+		
+		LOGGER.info("Adding action for bilateral filtering button.");
+		bilateralButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				imageMatrixProcessed = ImageProcessing.bilateralFilter(
+						imageMatrixProcessed,
+						Integer.parseInt(kernelSize.getText()));
+				
+				labelImageProcessed.setIcon(
+						ImageProcessing.convertMatrix(
+								imageMatrixProcessed,
+								labelImage.getWidth(),
+								labelImage.getHeight()));
+			}
+		});
+		
+		LOGGER.info("Adding action for box button.");
+		boxButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				imageMatrixProcessed = ImageProcessing.boxFilter(
+						imageMatrixProcessed,
+						Integer.parseInt(kernelSize.getText()));
+				
+				LOGGER.info("Matrix = " + imageMatrix.toString() + ".");
+				labelImageProcessed.setIcon(
+						ImageProcessing.convertMatrix(
+								imageMatrixProcessed,
+								labelImage.getWidth(),
+								labelImage.getHeight()));
+			}
+		});
+		
+		LOGGER.info("Adding action for edge detection button.");
+		edgeDetectButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				imageMatrixProcessed = ImageProcessing.edgeDetection(
+						imageMatrixProcessed,
+						Integer.parseInt(kernelSize.getText()));
+				
+				LOGGER.info("Matrix = " + imageMatrix.toString() + ".");
+				labelImageProcessed.setIcon(
+						ImageProcessing.convertMatrix(
+								imageMatrixProcessed,
+								labelImage.getWidth(),
+								labelImage.getHeight()));
 			}
 		});
 		
@@ -250,65 +367,136 @@ public class ImageFrame extends JFrame {
 		
 		LOGGER.info("Instantiate and initialise labels.");
 		labelImage = new JLabel();
-		labelImage.setBounds(IMAGE_X, IMAGE_Y, IMAGE_WIDTH, IMAGE_HEIGHT);
-		add(labelImage);
-		
 		labelImageProcessed = new JLabel();
+		kernelSizeText = new JLabel();
+		
+		labelImage.setBounds(IMAGE_X, IMAGE_Y, IMAGE_WIDTH, IMAGE_HEIGHT);
 		labelImageProcessed.setBounds(
-				IMAGE_X + IMAGE_WIDTH + 50,
+				IMAGE_X + IMAGE_WIDTH + 20,
 				IMAGE_Y,
 				IMAGE_WIDTH,
 				IMAGE_HEIGHT);
 		
+		kernelSizeText.setBounds(IMAGE_X, IMAGE_Y + IMAGE_HEIGHT + 20, 100, 20);
+		kernelSizeText.setText("Kernel size: ");
+		kernelSizeText.setVisible(false);
+
+		add(labelImage);
 		add(labelImageProcessed);
+		add(kernelSizeText);
+		
+		LOGGER.info("Instantiate and initialise text fields.");
+		kernelSize = new JTextField();
+		kernelSize.setBounds(
+				IMAGE_X + 100,
+				IMAGE_Y + IMAGE_HEIGHT + 20,
+				IMAGE_WIDTH - 100,
+				20);
+		
+		kernelSize.setText("3");
+		kernelSize.setVisible(false);
+		add(kernelSize);
 		
 		LOGGER.info("Instantiate and initialise buttons.");
 		erodeButton = new JButton("Erode");
 		dilateButton = new JButton("Dilate");
 		openingButton = new JButton("Opening");
 		closingButton = new JButton("Closing");
+		
+		blurButton = new JButton("Blur");
+		medianBlurButton = new JButton("Median Blur");
+		gaussianButton = new JButton("Gaussian");
+		bilateralButton = new JButton("Biateral");
+		
+		boxButton = new JButton("Box Filter");
+		edgeDetectButton = new JButton("Edge Detection");
+		
 		resetButton = new JButton("Reset");
 		
 		erodeButton.setBounds(
 				IMAGE_X,
-				IMAGE_Y + IMAGE_HEIGHT + 20,
-				IMAGE_WIDTH/2 - 10,
+				IMAGE_Y + IMAGE_HEIGHT + 60,
+				IMAGE_WIDTH/2 - 5,
 				20);
 		
 		dilateButton.setBounds(
-				IMAGE_X + IMAGE_WIDTH/2 + 10,
-				IMAGE_Y + IMAGE_HEIGHT + 20,
-				IMAGE_WIDTH/2 - 10,
+				IMAGE_X + IMAGE_WIDTH/2 + 5,
+				IMAGE_Y + IMAGE_HEIGHT + 60,
+				IMAGE_WIDTH/2 - 5,
 				20);
 		
 		openingButton.setBounds(
 				IMAGE_X,
-				IMAGE_Y + IMAGE_HEIGHT + 60,
-				IMAGE_WIDTH/2 - 10,
+				IMAGE_Y + IMAGE_HEIGHT + 90,
+				IMAGE_WIDTH/2 - 5,
 				20);
 		
 		closingButton.setBounds(
-				IMAGE_X + IMAGE_WIDTH/2 + 10,
-				IMAGE_Y + IMAGE_HEIGHT + 60,
-				IMAGE_WIDTH/2 - 10,
+				IMAGE_X + IMAGE_WIDTH/2 + 5,
+				IMAGE_Y + IMAGE_HEIGHT + 90,
+				IMAGE_WIDTH/2 - 5,
 				20);
 		
-		resetButton.setBounds(
+		blurButton.setBounds(
 				IMAGE_X,
-				IMAGE_Y + IMAGE_HEIGHT + 100,
-				IMAGE_WIDTH,
+				IMAGE_Y + IMAGE_HEIGHT + 120,
+				IMAGE_WIDTH/2 - 5,
 				20);
-
+		
+		medianBlurButton.setBounds(
+				IMAGE_X + IMAGE_WIDTH/2 + 5,
+				IMAGE_Y + IMAGE_HEIGHT + 120,
+				IMAGE_WIDTH/2 - 5,
+				20);
+		
+		gaussianButton.setBounds(
+				IMAGE_X,
+				IMAGE_Y + IMAGE_HEIGHT + 150,
+				IMAGE_WIDTH/2 - 5,
+				20);
+		
+		bilateralButton.setBounds(
+				IMAGE_X + IMAGE_WIDTH/2 + 5,
+				IMAGE_Y + IMAGE_HEIGHT + 150,
+				IMAGE_WIDTH/2 - 5,
+				20);
+		
+		boxButton.setBounds(IMAGE_X, IMAGE_Y + IMAGE_HEIGHT + 180, IMAGE_WIDTH, 20);
+		edgeDetectButton.setBounds(
+				IMAGE_X,
+				IMAGE_Y + IMAGE_HEIGHT + 180,
+				IMAGE_WIDTH, 20);
+		
+		resetButton.setBounds(IMAGE_X, IMAGE_Y + IMAGE_HEIGHT + 210, IMAGE_WIDTH, 20);
+		
 		erodeButton.setVisible(false);
 		dilateButton.setVisible(false);
 		openingButton.setVisible(false);
 		closingButton.setVisible(false);
+		
+		blurButton.setVisible(false);
+		medianBlurButton.setVisible(false);
+		gaussianButton.setVisible(false);
+		bilateralButton.setVisible(false);
+		
+		boxButton.setVisible(false);
+		edgeDetectButton.setVisible(false);
+		
 		resetButton.setVisible(false);
 		
 		add(erodeButton);
 		add(dilateButton);
 		add(openingButton);
 		add(closingButton);
+		
+		add(blurButton);
+		add(medianBlurButton);
+		add(gaussianButton);
+		add(bilateralButton);
+
+		add(boxButton);
+		add(edgeDetectButton);
+		
 		add(resetButton);
 	}
 }
