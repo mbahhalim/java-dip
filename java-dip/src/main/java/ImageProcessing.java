@@ -183,6 +183,24 @@ public class ImageProcessing {
 		return dst;
 	}
 	
+	public static Mat grayscaling(Mat matrix) {
+		
+		Mat dst = new Mat(matrix.rows(), matrix.cols(), matrix.type());
+		
+		LOGGER.info("Matrix = " + matrix.toString() + ".");
+		try {
+
+			Imgproc.cvtColor(matrix, dst, Imgproc.COLOR_RGB2GRAY);
+		} catch (Exception e) {
+			
+		} finally {
+
+			LOGGER.info("Processed matrix = " + dst.toString() + ".");	
+		}
+		
+		return dst;
+	}
+	
 	public static Mat otsuTreshold(Mat matrix) {
 		
 		Mat dst = new Mat(matrix.rows(), matrix.cols(), matrix.type());
